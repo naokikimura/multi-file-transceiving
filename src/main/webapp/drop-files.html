@@ -1,0 +1,102 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>Drop Files</title>
+  <style type="text/css">
+    #drop-files {
+      width: 100%;
+      height: 100%;
+      border: solid gray;
+    }
+  </style>
+  <script type="text/javascript">
+    var uploadFiles = [];
+    window.onload = function() {
+      var table = document.getElementById('drop-files');
+      table.addEventListener('dragenter', function (event) {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'copy';
+      }, false);
+      table.addEventListener('dragover', function (event) {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'copy';
+      }, false);
+
+      function append(files) {
+        var files = Array.prototype.slice.call(files);
+        console.log(files);
+        var tbody = document.querySelector('#drop-files tbody');
+        files.forEach(function (file) {
+          uploadFiles.push(file);
+          var tr = ['name', 'type', 'size', 'lastModifiedDate'].map(function (key) {
+            var td = document.createElement('td');
+            td.appendChild(document.createTextNode(file[key]))
+            return td;
+          }).reduce(function (tr, td) {
+            tr.appendChild(td);
+            return tr;
+          }, document.createElement('tr'));
+          tbody.appendChild(tr);
+        });
+      }
+
+      table.addEventListener('drop', function (event) {
+        event.preventDefault();
+        append(event.dataTransfer.files);
+      }, false);
+
+      var input = document.querySelector('#upload-form input[name=files]');
+      input.addEventListener('change', function (event) {
+        append(event.target.files);
+        event.target.value = null;
+      }, false);
+
+      var form = document.getElementById('upload-form');
+      form.addEventListener('submit', function (event) {
+        event.preventDefault()
+        var data = uploadFiles.reduce(function (data, file) { data.append('files', file); return data; }, new FormData(form));
+        console.log(data);
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '.', true);
+        xhr.onload = function (event) {
+          if (xhr.status == 200) {
+            form.reset();
+          }
+        };
+        xhr.send(data);
+      });
+      form.addEventListener('reset', function (event) {
+        uploadFiles = [];
+        var nodes = Array.prototype.slice.call(document.querySelector('#drop-files tbody').childNodes);
+        nodes.forEach(function (node) { node.parentNode.removeChild(node); });
+      }, false);
+    }
+  </script>
+</head>
+<body>
+  <form id="upload-form" enctype="multipart/form-data" method="post" action="">
+  <table id="drop-files">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Size</th>
+        <th>Last Modified</th>
+      </tr>
+    </thead>
+    <tbody>
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="4">Drop files here.</td>
+      </tr>
+    </tfoot>
+  </table>
+  <input name="files" type="file" multiple />
+  <button type="submit">Upload</button>
+  <button type="reset">Reset</button>
+  </form>
+</body>
+</html>
