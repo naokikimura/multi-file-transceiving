@@ -8,7 +8,6 @@
     #drop-files {
       width: 100%;
       height: 100%;
-      border: solid gray;
     }
   </style>
   <script type="text/javascript">
@@ -55,13 +54,19 @@
 
       var form = document.getElementById('upload-form');
       form.addEventListener('submit', function (event) {
-        event.preventDefault()
-        var data = uploadFiles.reduce(function (data, file) { data.append('files', file); return data; }, new FormData(form));
+        event.preventDefault();
+        var data = uploadFiles.reduce(function (data, file) {
+          data.append('files', file);
+          return data;
+        }, new FormData(form));
         console.log(data);
         var xhr = new XMLHttpRequest();
-        xhr.open('POST', '.', true);
+        xhr.open(form.method, form.action, true);
         xhr.onload = function (event) {
-          if (xhr.status == 200) {
+          console.log('onload', ':', event);
+          if (this.status == 200) {
+            var files = JSON.parse(this.response);
+            console.log(files);
             form.reset();
           }
         };
@@ -76,8 +81,8 @@
   </script>
 </head>
 <body>
-  <form id="upload-form" enctype="multipart/form-data" method="post" action="">
-  <table id="drop-files">
+  <form id="upload-form" enctype="multipart/form-data" method="post" action="./upload">
+  <table id="drop-files" border="1">
     <thead>
       <tr>
         <th>Name</th>
@@ -90,11 +95,10 @@
     </tbody>
     <tfoot>
       <tr>
-        <td colspan="4">Drop files here.</td>
+        <td colspan="4">Drop files here or <input name="files" type="file" multiple /></td>
       </tr>
     </tfoot>
   </table>
-  <input name="files" type="file" multiple />
   <button type="submit">Upload</button>
   <button type="reset">Reset</button>
   </form>
